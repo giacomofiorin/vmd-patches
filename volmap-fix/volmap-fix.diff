@@ -1,0 +1,368 @@
+diff --git a/src/TclCommands.h b/src/TclCommands.h
+index a35e4bd57..d817d3a10 100755
+--- a/src/TclCommands.h
++++ b/src/TclCommands.h
+@@ -75,6 +75,21 @@ int tcl_get_matrix(const char *fctn, Tcl_Interp *interp,
+ int tcl_get_weights(Tcl_Interp *interp, VMDApp *app, AtomSel *sel, 
+                        Tcl_Obj *weight_obj, float *data);
+ 
++/// Assign weights of 1 to all atoms in the selection, and zero otherwise
++int atomsel_default_weights(AtomSel *sel, float *weights);
++
++/// Obtain weights from a Tcl list
++int get_weights_from_tcl_list(Tcl_Interp *interp, VMDApp *app, AtomSel *sel,
++                              Tcl_Obj *weights_obj, float *weights);
++
++/// Get the index of the given keyword in the VMD namespace (avoid having to
++/// include SymbolTable.h)
++int get_attribute_index(VMDApp *app, char const *string);
++
++/// Obtain weights from the requested attribute
++int get_weights_from_attribute(VMDApp *app, AtomSel *sel,
++                               char const *weights_string, float *weights);
++
+ // Get a vector from a string
+ int tcl_get_vector(const char *s, float *val, Tcl_Interp *interp);
+ 
+diff --git a/src/TclMeasure.C b/src/TclMeasure.C
+index 21438b3ed..5dc00b592 100755
+--- a/src/TclMeasure.C
++++ b/src/TclMeasure.C
+@@ -54,6 +54,8 @@
+ // floating point data, return that data, otherwise error.
+ // Otherwise, the item must be a list of floats.  Set the selected items
+ // from the list.   
++
++// NOTE: this cannot be used on selections that change between frames.
+ int tcl_get_weights(Tcl_Interp *interp, VMDApp *app, AtomSel *sel, 
+                        Tcl_Obj *weight_obj, float *data) {
+ 
+@@ -67,10 +69,12 @@ int tcl_get_weights(Tcl_Interp *interp, VMDApp *app, AtomSel *sel,
+     for (int i=0; i<sel->selected; i++) {
+       data[i] = 1.0;
+     }
+-    return 0;
++    return MEASURE_NOERR;
+   }
++
+   // if a selection string was given, check the symbol table
+   SymbolTable *atomSelParser = app->atomSelParser; 
++
+   // weights must return floating point values, so the symbol must not 
+   // be a singleword, so macro is NULL.
+   atomsel_ctxt context(atomSelParser, 
+@@ -126,6 +130,86 @@ int tcl_get_weights(Tcl_Interp *interp, VMDApp *app, AtomSel *sel,
+   return 0;
+ }
+ 
++
++int atomsel_default_weights(AtomSel *sel, float *weights) {
++  if (sel->firstsel > 0)
++    memset(&weights[0], 0, sel->firstsel * sizeof(float)); 
++
++  for (int i=sel->firstsel; i<=sel->lastsel; i++) {
++    // Use the standard "on" check instead of typecasting the array elements
++    weights[i] = sel->on[i] ? 1.0f : 0.0f;
++  }
++
++  if (sel->lastsel < (sel->num_atoms - 1))
++    memset(&weights[sel->lastsel+1], 0, ((sel->num_atoms - 1) - sel->lastsel) * sizeof(float)); 
++
++  return 0;
++}
++
++
++int get_weights_from_tcl_list(Tcl_Interp *interp, VMDApp *app, AtomSel *sel,
++                              Tcl_Obj *weights_obj, float *weights) {
++  int list_num = 0;
++  Tcl_Obj **list_elems = NULL;
++  if (Tcl_ListObjGetElements(interp, weights_obj, &list_num, &list_elems)
++      != TCL_OK) {
++    return MEASURE_ERR_BADWEIGHTPARM;
++  }
++  if (list_num != sel->num_atoms) {
++    return MEASURE_ERR_BADWEIGHTNUM;
++  }
++  for (int i = 0; i < sel->num_atoms; i++) {
++    double tmp_data = 0.0;
++    if (Tcl_GetDoubleFromObj(interp, list_elems[i], &tmp_data) != TCL_OK) {
++      return TCL_ERROR;
++    }
++    weights[i] = static_cast<float>(tmp_data);
++  }
++  return 0;
++}
++
++
++// This routine eliminates the need to include SymbolTable.h,
++// and allows the caller to determine if a per-atom attribute/field
++// exists or not.
++int get_attribute_index(VMDApp *app, char const *string) {
++  SymbolTable *atomSelParser = app->atomSelParser;
++  return atomSelParser->find_attribute(string);
++}
++
++
++int get_weights_from_attribute(VMDApp *app, AtomSel *sel,
++                               char const *weights_string, float *weights) {
++  SymbolTable *atomSelParser = app->atomSelParser;
++  int fctn = atomSelParser->find_attribute(weights_string);
++  // first, check to see that the function returns floats.
++  // if it doesn't, it makes no sense to use it as a weight
++  if (atomSelParser->fctns.data(fctn)->returns_a !=
++      SymbolTableElement::IS_FLOAT) {
++    return MEASURE_ERR_BADWEIGHTPARM;  // can't understand weight parameter
++  }
++  atomsel_ctxt context(atomSelParser,
++                       app->moleculeList->mol_from_id(sel->molid()),
++                       sel->which_frame, NULL);
++  double *tmp_data = new double[sel->num_atoms];
++  atomSelParser->fctns.data(fctn)->keyword_double(&context, sel->num_atoms,
++                                                  tmp_data, sel->on);
++
++  if (sel->firstsel > 0)
++    memset(&weights[0], 0, sel->firstsel * sizeof(float)); 
++
++  for (int i=sel->firstsel; i<=sel->lastsel; i++) {
++    weights[i] = sel->on[i] ? static_cast<float>(tmp_data[i]) : 0.0;
++  }
++
++  if (sel->lastsel < (sel->num_atoms - 1))
++    memset(&weights[sel->lastsel+1], 0, ((sel->num_atoms - 1) - sel->lastsel) * sizeof(float)); 
++
++  delete [] tmp_data;
++  return 0;
++}
++
++
+ // get the  atom index re-ordering list for use by measure_fit
+ int tcl_get_orders(Tcl_Interp *interp, int selnum, 
+                        Tcl_Obj *order_obj, int *data) {
+diff --git a/src/TclVolMap.C b/src/TclVolMap.C
+index b2b90ac9b..5f8fd2ae6 100755
+--- a/src/TclVolMap.C
++++ b/src/TclVolMap.C
+@@ -713,6 +713,8 @@ static int vmd_volmap_new_fromtype(VMDApp *app, int argc, Tcl_Obj * const objv[]
+   enum {UNDEF_MAP, DENS_MAP, INTERP_MAP, DIST_MAP, OCCUP_MAP, MASK_MAP,
+         CPOTENTIAL_MAP, CPOTENTIALMSM_MAP } maptype=UNDEF_MAP;
+ 
++  int ret_val = 0;
++
+   char *maptype_string=Tcl_GetString(objv[0]); 
+ 
+   if      (!strcmp(maptype_string, "density"))    maptype=DENS_MAP;
+@@ -930,16 +932,38 @@ static int vmd_volmap_new_fromtype(VMDApp *app, int argc, Tcl_Obj * const objv[]
+   }
+  
+   // parse weights
+-  int ret_val=0;
+   float *weights = NULL;
++  char *weight_string = NULL;
++  int weight_mutable = 1;
+   if (accept_weight) {
+-    weights = new float[sel->selected];
++    weights = new float[sel->num_atoms];
++    if (arg_weight) {
++      weight_string = Tcl_GetStringFromObj(objv[arg_weight], NULL);
++      if (!weight_string || !strcmp(weight_string, "none")) {
++        ret_val = atomsel_default_weights(sel, weights);
++        weight_string = NULL;
++      } else {
++        // Check if the argument is a VMD attribute
++        int fctn = get_attribute_index(app, weight_string);
++        if (fctn >= 0) {
++          ret_val = get_weights_from_attribute(app, sel, weight_string,
++                                               weights);
++          if (ret_val == MEASURE_ERR_BADWEIGHTPARM) {
++            Tcl_AppendResult(interp,
++                             "weight attribute must have floating point values",
++                             NULL);
++          }
++        } else {
++          ret_val = get_weights_from_tcl_list(interp, app, sel,
++                                              objv[arg_weight], weights);
++          weight_string = NULL;
++          weight_mutable = 0; // The Tcl list will not change
++        }
++      }
++    } else {
++      ret_val = atomsel_default_weights(sel, weights);
++    }
+ 
+-    if (arg_weight) 
+-      ret_val = tcl_get_weights(interp, app, sel, objv[arg_weight], weights);
+-    else
+-      ret_val = tcl_get_weights(interp, app, sel, NULL, weights);
+-    
+     if (ret_val < 0) {
+       Tcl_AppendResult(interp, "volmap: ", measure_error(ret_val), NULL);
+       delete [] weights;
+@@ -955,7 +979,9 @@ static int vmd_volmap_new_fromtype(VMDApp *app, int argc, Tcl_Obj * const objv[]
+   // init the map creator objects and set default filenames
+   switch(maptype) {
+     case DENS_MAP: 
+-      volcreate = new VolMapCreateDensity(app, sel, (float)resolution, weights, (float)radius_factor);
++      volcreate = new VolMapCreateDensity(app, sel, (float)resolution,
++                                          weights, weight_string,
++                                          weight_mutable, (float)radius_factor);
+       if (!filebase) {
+         filebase = new char[strlen("density_out.dx")+1];
+         strcpy(filebase, "density_out.dx");
+@@ -963,7 +989,9 @@ static int vmd_volmap_new_fromtype(VMDApp *app, int argc, Tcl_Obj * const objv[]
+       break;
+ 
+     case INTERP_MAP: 
+-      volcreate = new VolMapCreateInterp(app, sel, (float)resolution, weights);
++      volcreate = new VolMapCreateInterp(app, sel, (float)resolution,
++                                         weights, weight_string,
++                                         weight_mutable);
+       if (!filebase) {
+         filebase = new char[strlen("interp_out.dx")+1];
+         strcpy(filebase, "interp_out.dx");
+diff --git a/src/VolMapCreate.C b/src/VolMapCreate.C
+index ddddf8635..86bc74859 100755
+--- a/src/VolMapCreate.C
++++ b/src/VolMapCreate.C
+@@ -38,6 +38,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <errno.h> // only for write_dx_file()
++#include <tcl.h>
+ 
+ #include "VMDApp.h"
+ #include "MoleculeList.h"
+@@ -52,6 +53,7 @@
+ #include "ResizeArray.h"
+ #include "Inform.h"
+ #include "WKFUtils.h"
++#include "TclCommands.h"
+ 
+ #if defined(VMDUSEMSMPOT)
+ #include "msmpot.h"
+@@ -564,6 +566,14 @@ int VolMapCreateDensity::compute_frame (int frame, float *voldata) {
+     sel->which_frame = save_frame;
+     return -1;
+   }
++
++  if (weight_mutable) {
++    if (weight_string) {
++      get_weights_from_attribute(app, sel, weight_string, weight);
++    } else {
++      atomsel_default_weights(sel, weight);
++    }
++  }
+   
+   float cellx[3], celly[3], cellz[3];
+   volmap->cell_axes(cellx, celly, cellz);
+@@ -572,7 +582,6 @@ int VolMapCreateDensity::compute_frame (int frame, float *voldata) {
+   for (i=0; i<3; i++) 
+     min_coords[i] = float(volmap->origin[i] - 0.5f*(cellx[i] + celly[i] + cellz[i]));
+   
+-  int w_index=0;
+   int gx, gy, gz;   // grid coord indices
+   for (i=sel->firstsel; i<=sel->lastsel; i++) { 
+     if (!sel->on[i]) continue; //atom is not selected
+@@ -583,7 +592,7 @@ int VolMapCreateDensity::compute_frame (int frame, float *voldata) {
+       
+     float scaled_radius = 0.5f*radius_scale*radius[i];
+     float exp_factor = 1.0f/(2.0f*scaled_radius*scaled_radius);
+-    float norm = weight[w_index++]/(sqrtf((float) (8.0f*VMD_PI*VMD_PI*VMD_PI))*scaled_radius*scaled_radius*scaled_radius);
++    float norm = weight[i]/(sqrtf((float) (8.0f*VMD_PI*VMD_PI*VMD_PI))*scaled_radius*scaled_radius*scaled_radius);
+                   
+     int steps = (int)(4.1f*scaled_radius/delta);
+     int iz, iy, ix;
+@@ -647,8 +656,15 @@ int VolMapCreateInterp::compute_frame (int frame, float *voldata) {
+     sel->which_frame = save_frame;
+     return -1;
+   }
++
++  if (weight_mutable) {
++    if (weight_string) {
++      get_weights_from_attribute(app, sel, weight_string, weight);
++    } else {
++      atomsel_default_weights(sel, weight);
++    }
++  }
+   
+-  int w_index=0;
+   int gx, gy, gz;      // grid coord indices
+   float fgx, fgy, fgz; // fractional grid coord indices
+   float dx, dy, dz;    // to measure distances
+@@ -673,28 +689,28 @@ int VolMapCreateInterp::compute_frame (int frame, float *voldata) {
+     // Perform trilinear interpolation
+ 
+     voldata[ gx + gy*GRIDSIZEX + gz*GRIDSIZEXY ] \
+-      += (1.0f - dx) * (1.0f - dy) * (1.0f - dz) * weight[w_index];
++      += (1.0f - dx) * (1.0f - dy) * (1.0f - dz) * weight[i];
+ 
+     voldata[ (gx+1) + (gy+1)*GRIDSIZEX + (gz+1)*GRIDSIZEXY ] \
+-      += dx * dy * dz * weight[w_index];
++      += dx * dy * dz * weight[i];
+ 
+     voldata[ (gx+1) + (gy+1)*GRIDSIZEX + gz*GRIDSIZEXY ] \
+-      += dx * dy * (1.0f - dz) * weight[w_index];
++      += dx * dy * (1.0f - dz) * weight[i];
+ 
+     voldata[ gx + gy*GRIDSIZEX + (gz+1)*GRIDSIZEXY ] \
+-      += (1.0f - dx) * (1.0f - dy) * dz * weight[w_index];
++      += (1.0f - dx) * (1.0f - dy) * dz * weight[i];
+ 
+     voldata[ (gx+1) + gy*GRIDSIZEX + gz*GRIDSIZEXY ] \
+-      += dx * (1.0f - dy) * (1.0f - dz) * weight[w_index];
++      += dx * (1.0f - dy) * (1.0f - dz) * weight[i];
+ 
+     voldata[ gx + (gy+1)*GRIDSIZEX + (gz+1)*GRIDSIZEXY ] \
+-      += (1.0f - dx) * dy * dz * weight[w_index];
++      += (1.0f - dx) * dy * dz * weight[i];
+ 
+     voldata[ gx + (gy+1)*GRIDSIZEX + gz*GRIDSIZEXY ] \
+-      += (1.0f - dx) * dy * (1.0f - dz) * weight[w_index];
++      += (1.0f - dx) * dy * (1.0f - dz) * weight[i];
+ 
+     voldata[ (gx+1) + gy*GRIDSIZEX + (gz+1)*GRIDSIZEXY ] \
+-      += dx * (1.0f - dy) + dz * weight[w_index++];
++      += dx * (1.0f - dy) + dz * weight[i];
+   }
+ 
+   sel->which_frame = save_frame;
+diff --git a/src/VolMapCreate.h b/src/VolMapCreate.h
+index 707b14534..654899824 100755
+--- a/src/VolMapCreate.h
++++ b/src/VolMapCreate.h
+@@ -106,13 +106,17 @@ public:
+ class VolMapCreateDensity : public VolMapCreate {
+ protected:
+   float *weight;
++  char const *weight_string;
++  int weight_mutable;
+   int compute_init();
+   int compute_frame(int frame, float *voldata);
+   float radius_scale; // mult. factor for atomic radii
+   
+ public:
+-  VolMapCreateDensity(VMDApp *app, AtomSel *sel, float res, float *the_weight, float the_radscale) : VolMapCreate(app, sel, res) {
++  VolMapCreateDensity(VMDApp *app, AtomSel *sel, float res, float *the_weight, char const *the_weight_string, int the_weight_mutable, float the_radscale) : VolMapCreate(app, sel, res) {
+     weight = the_weight;
++    weight_string = the_weight_string;
++    weight_mutable = the_weight_mutable;
+     // number of random points to use for each atom's gaussian distr.
+     radius_scale = the_radscale;
+   }
+@@ -122,12 +126,16 @@ public:
+ class VolMapCreateInterp : public VolMapCreate {
+ protected:
+   float *weight;
++  char const *weight_string;
++  int weight_mutable;
+   int compute_init();
+   int compute_frame(int frame, float *voldata);
+ 
+ public:
+-  VolMapCreateInterp(VMDApp *app, AtomSel *sel, float res, float *the_weight) : VolMapCreate(app, sel, res) {
++  VolMapCreateInterp(VMDApp *app, AtomSel *sel, float res, float *the_weight, char const *the_weight_string, int the_weight_mutable) : VolMapCreate(app, sel, res) {
+     weight = the_weight;
++    weight_string = the_weight_string;
++    weight_mutable = the_weight_mutable;
+   }
+ };
+ 
