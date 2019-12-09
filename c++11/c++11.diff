@@ -1,0 +1,251 @@
+diff --git a/configure b/configure
+index 98c54407d..ec8a5394b 100755
+--- a/configure
++++ b/configure
+@@ -492,7 +492,7 @@ $arch_compilerc   = $arch_echo;
+ $arch_rcflags     = "No resource compiler required on this platform.";
+ 
+ $arch_cc          = "cc";
+-$arch_ccpp        = "CC";
++$arch_ccpp        = "CC -std=c++11";
+ $arch_nvcc        = "/usr/local/cuda-10.2/bin/nvcc";
+ $arch_nvccflags   = "-lineinfo --ptxas-options=-v " . 
+                     "-gencode arch=compute_30,code=compute_30 " .
+@@ -2126,7 +2126,7 @@ if ($config_arch eq "BLUEWATERS" ||
+   if ($config_icc) {
+     # for compiling with Intel C/C++:
+     $arch_cc          = "cc";
+-    $arch_ccpp        = "CC";
++    $arch_ccpp        = "CC -std=c++11";
+     $arch_copts       = "-Wall -Wno-unknown-pragmas -m64 -msse2 -O3";
+     $arch_opt_flag    = "-Wall -Wno-unknown-pragmas -m64 -msse2 -O3";
+ 
+@@ -2143,9 +2143,9 @@ if ($config_arch eq "BLUEWATERS" ||
+   } else {
+     # Assume GCC 
+     $arch_cc          = "cc";
+-    $arch_ccpp        = "CC";
++    $arch_ccpp        = "CC -std=c++11";
+     $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O6 -ffast-math";
+-    $arch_opt_flag    = "-m64 -fno-for-scope -Wno-deprecated -Wall -Wno-unknown-pragmas -O6 -ffast-math";
++    $arch_opt_flag    = "-m64 -Wno-deprecated -Wall -Wno-unknown-pragmas -O6 -ffast-math";
+   }
+ 
+   if ($config_mpi) {
+@@ -2247,14 +2247,14 @@ if ($config_arch eq "FREEBSD") {
+     $arch_yacc     = "bison -b y -d ";  # If standard yacc doesn't work
+ 
+     $arch_cc          = "gcc";
+-    $arch_ccpp        = "g++";
++    $arch_ccpp        = "g++ -std=c++11";
+     $arch_depend_flag = "-MM";
+     $arch_shld        = "g++ -shared";
+     $arch_shlibname   = "so";
+     $arch_shcppopts   = "-fPIC";
+     $arch_shldopts    = "-L/usr/local/lib";
+ 
+-    $arch_opt_flag    = "-m32 -fno-for-scope -Wno-deprecated -Wall -Wno-unknown-pragmas -O3";
++    $arch_opt_flag    = "-m32 -Wno-deprecated -Wall -Wno-unknown-pragmas -O3";
+     $arch_copts       = "-m32 -Wall -Wno-unknown-pragmas -O3";
+ 
+     if ($config_static) {
+@@ -2303,7 +2303,7 @@ if ($config_arch eq "FREEBSDAMD64") {
+     $arch_yacc     = "bison -b y -d ";  # If standard yacc doesn't work
+ 
+     $arch_cc          = "gcc";
+-    $arch_ccpp        = "g++";
++    $arch_ccpp        = "g++ -std=c++11";
+     $arch_depend_flag = "-MM";
+     $arch_shld        = "ld -shared";
+     $arch_shlibname   = "so";
+@@ -2382,13 +2382,13 @@ if ($config_arch eq "LINUX") {
+     } else {
+       # compling with GCC
+       $arch_cc          = "gcc";
+-      $arch_ccpp        = "g++";
++      $arch_ccpp        = "g++ -std=c++11";
+       $arch_depend_flag = "-MM";
+       $arch_shld        = "g++ -shared";
+       $arch_shlibname   = "so";
+       $arch_shcppopts   = "-fPIC";
+       $arch_shldopts    = "";
+-      $arch_opt_flag    = "-m32 -fno-for-scope -Wno-deprecated -Wall -Wno-unknown-pragmas -O3";
++      $arch_opt_flag    = "-m32 -Wno-deprecated -Wall -Wno-unknown-pragmas -O3";
+       $arch_copts       = "-m32 -Wall -Wno-unknown-pragmas -O3";
+ 
+       if ($config_static) {
+@@ -2449,7 +2449,7 @@ if ($config_arch eq "LINUXAMD64") {
+     if ($config_icc) {
+       # for compiling with Intel C/C++:
+       $arch_cc          = "icc";
+-      $arch_ccpp        = "icpc";
++      $arch_ccpp        = "icpc -std=c++11";
+       if ($config_avx512) {
+         $arch_opt_flag    = "-Wall -Wno-unknown-pragmas -m64 -xMIC-AVX512 -O3";
+         $arch_copts       = "-Wall -Wno-unknown-pragmas -m64 -xMIC-AVX512 -O3";
+@@ -2491,15 +2491,15 @@ if ($config_arch eq "LINUXAMD64") {
+       }
+     } elsif ($config_clang) {
+       $arch_cc          = "clang";
+-      $arch_ccpp        = "clang++";
++      $arch_ccpp        = "clang++ -std=c++11";
+       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math ";
+       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math ";
+       $arch_depend_flag = "-MM";
+     } else {
+       # for compiling with g++:
+       $arch_cc		= "gcc";
+-      $arch_ccpp  	= "g++";
+-      $arch_opt_flag	= "-m64 -fno-for-scope -Wno-deprecated -Wall -Wno-unknown-pragmas -O6 -ffast-math";
++      $arch_ccpp  	= "g++ -std=c++11";
++      $arch_opt_flag	= "-m64 -Wno-deprecated -Wall -Wno-unknown-pragmas -O6 -ffast-math";
+       $arch_depend_flag   = "-MM";
+       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O6 -ffast-math";
+ 
+@@ -2583,7 +2583,7 @@ if ($config_arch eq "LINUXCARMA") {
+                     "--ftz=true ";
+   $cuda_library     = "-L/usr/local/cuda/lib";
+   $arch_cc       = "cc";
+-  $arch_ccpp     = "c++";
++  $arch_ccpp     = "c++ -std=c++11";
+   $arch_copts       = "-Wall -Wno-unknown-pragmas -march=armv7-a -mcpu=cortex-a9 -mtune=cortex-a9 -mfpu=vfpv3-d16 -ffast-math -fomit-frame-pointer -fno-strict-aliasing -O3";
+   $arch_opt_flag    = "-Wall -Wno-unknown-pragmas -march=armv7-a -mcpu=cortex-a9 -mtune=cortex-a9 -mfpu=vfpv3-d16 -ffast-math -fomit-frame-pointer -fno-strict-aliasing -O3";
+   $arch_lex      = "flex";
+@@ -2641,7 +2641,7 @@ if ($config_arch eq "MACOSX") {
+     $python_libs        = "-framework Python -lpthread";
+ 
+     $arch_cc          = "cc";
+-    $arch_ccpp        = "c++";
++    $arch_ccpp        = "c++ -std=c++11";
+     $arch_depend_flag = "-MM";
+     $arch_opt_flag    = "-fPIC -Os -ffast-math";
+     $arch_copts       = "-fPIC -Os -ffast-math";
+@@ -2731,13 +2731,13 @@ if ($config_arch eq "MACOSXX86" || $config_arch eq "MACOSXX86_64") {
+ 
+     if ($config_lp64) {
+       $arch_cc          = "cc";
+-      $arch_ccpp        = "c++";
++      $arch_ccpp        = "c++ -std=c++11";
+       $arch_depend_flag = "-MM";
+       $arch_opt_flag    = "-m64 -fPIC -Os -ffast-math";
+       $arch_copts       = "-m64 -fPIC -Os -ffast-math";
+     } else {
+       $arch_cc          = "cc";
+-      $arch_ccpp        = "c++";
++      $arch_ccpp        = "c++ -std=c++11";
+       $arch_depend_flag = "-MM";
+       $arch_opt_flag    = "-m32 -fPIC -Os -ffast-math";
+       $arch_copts       = "-m32 -fPIC -Os -ffast-math";
+@@ -2863,20 +2863,20 @@ if ($config_arch eq "SUMMIT") {
+ 
+     if ($config_xlc) {
+       $arch_cc          = "xlc";
+-      $arch_ccpp        = "xlC";
++      $arch_ccpp        = "xlC -qlanglvl=extended0x";
+       $arch_copts       = "-O4 -qsuppress=1500-036 -q64 -qarch=pwr9 -qtune=pwr9 -qmaxmem=-1 -qnoipa -qignerrno -qfloat=rsqrt -qnostrict";
+       $arch_opt_flag    = "-O4 -qsuppress=1500-036 -q64 -qarch=pwr9 -qtune=pwr9 -qmaxmem=-1 -qnoipa -qignerrno -qfloat=rsqrt -qnostrict";
+ #      $arch_cppopts     = "-D_H_ACCESS=1";
+       $arch_depend_flag = "-MM";
+     } elsif ($config_gcc) {
+       $arch_cc          = "gcc";
+-      $arch_ccpp        = "g++";
++      $arch_ccpp        = "g++ -std=c++11";
+       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
+       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
+       $arch_depend_flag = "-MM";
+     } elsif ($config_clang) {
+       $arch_cc          = "clang";
+-      $arch_ccpp        = "clang++";
++      $arch_ccpp        = "clang++ -std=c++11";
+       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power9";
+       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power9";
+       $arch_depend_flag = "-MM";
+@@ -2936,14 +2936,14 @@ if ($config_arch eq "OPENPOWER" || $config_arch eq "SUMMITDEV") {
+ 
+     if ($config_xlc) {
+       $arch_cc          = "xlc";
+-      $arch_ccpp        = "xlC";
++      $arch_ccpp        = "xlC -qlanglvl=extended0x";
+       $arch_copts       = "-O4 -q64 -qarch=pwr8 -qtune=pwr8 -qmaxmem=-1 -qnoipa -qignerrno -qfloat=rsqrt -qnostrict";
+       $arch_opt_flag    = "-O4 -q64 -qarch=pwr8 -qtune=pwr8 -qmaxmem=-1 -qnoipa -qignerrno -qfloat=rsqrt -qnostrict";
+ #      $arch_cppopts     = "-D_H_ACCESS=1";
+       $arch_depend_flag = "-MM";
+     } else {
+       $arch_cc          = "gcc";
+-      $arch_ccpp        = "g++";
++      $arch_ccpp        = "g++ -std=c++11";
+       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
+       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
+       $arch_depend_flag = "-MM";
+@@ -2996,7 +2996,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
+       if ($config_lp64) {
+         print "GCC doesn't support LP64 ABI on this platform currently.\n";
+       }
+-      $arch_ccpp        = "g++";
++      $arch_ccpp        = "g++ -std=c++11";
+       $arch_cc	        = "gcc";
+       $arch_opt_flag    = "-O";
+       $arch_copts       = "-O";
+@@ -3006,7 +3006,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
+       # Using Sun's compilers.
+       if ($config_lp64) {
+         print "Configured for a 64-bit build.\n";
+-        $arch_ccpp        = "CC -D__EXTENSIONS__";
++        $arch_ccpp        = "CC -D__EXTENSIONS__ -std=c++11";
+         $arch_cc          = "cc -D__EXTENSIONS__";
+         if ($config_pthreads) {
+           $arch_opt_flag    = "-mt -fast -xO3 -native -xarch=v9a";
+@@ -3019,7 +3019,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
+         $arch_depend_flag = "-xM";
+       } else {
+         print "Configured for a 32-bit build.\n";
+-        $arch_ccpp        = "CC -D__EXTENSIONS__";
++        $arch_ccpp        = "CC -D__EXTENSIONS__ -std=c++11";
+         $arch_cc          = "cc -D__EXTENSIONS__";
+         if ($config_pthreads) {
+           $arch_opt_flag    = "-mt -fast -xO3 -native -xarch=v8plusa";
+@@ -3069,7 +3069,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
+       if ($config_lp64) {
+         die "No LP64 gcc for this platform currently.\n";
+       }
+-      $arch_ccpp        = "g++";
++      $arch_ccpp        = "g++ -std=c++11";
+       $arch_cc	        = "gcc";
+ # XXX gcc/g++ 2.95 and newer need -fpermissive since the X11 headers 
+ # on Solaris (and other systems) are broken and still assume that missing
+@@ -3083,7 +3083,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
+       # Using Sun's compilers
+       if ($config_lp64) {
+         print "Configured for a 64-bit build.\n";
+-        $arch_ccpp        = "CC -D__EXTENSIONS__";
++        $arch_ccpp        = "CC -D__EXTENSIONS__ -std=c++11";
+         $arch_cc          = "cc -D__EXTENSIONS__";
+         if ($config_pthreads) {
+           $arch_opt_flag    = "-mt -fast -xO5 -xarch=native64";
+@@ -3104,7 +3104,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
+         }
+       } else {
+         print "Configured for a 32-bit build.\n";
+-        $arch_ccpp        = "CC -D__EXTENSIONS__";
++        $arch_ccpp        = "CC -D__EXTENSIONS__ -std=c++11";
+         $arch_cc          = "cc -D__EXTENSIONS__";
+         if ($config_pthreads) {
+           $arch_copts       = "-mt -fast -xO3 -native";
+@@ -3160,7 +3160,7 @@ if ($config_arch eq "WIN32") {
+       $arch_cppopts     = "/TP";
+       $arch_coptout     = "/Fo";
+     } else {
+-      $arch_ccpp        = "g++";
++      $arch_ccpp        = "g++ -std=c++11";
+       $arch_cc	        = "gcc";
+       $arch_opt_flag    = "-O";
+       $arch_debug_flag  = "-g";
+@@ -3177,7 +3177,7 @@ if ($config_arch eq "WIN32") {
+ 
+ 
+ if ($config_arch eq "WIN64") {
+-    $arch_ccpp	      = "g++";
++    $arch_ccpp	      = "g++ -std=c++11";
+     $arch_cc	      = "gcc";
+     $arch_opt_flag    = "-O";
+     $arch_debug_flag  = "-g";

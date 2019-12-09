@@ -8,6 +8,17 @@ If a diff file is empty, it means that the corresponding change has been already
 
 The following changes are included in this repository:
 
+
+- `c++11`: This patch enables building VMD with the C++11 standard, allowing to include in the resulting build newer code that requires it, like the `lepton` patch or [certain features](https://colvars.github.io/README-c++11.html) of the Colvars module.
+
+  _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2020-06-03.
+
+
+- `lepton`: This change adds a build recipe for the [Lepton](https://simtk.org/projects/lepton) library, which is available from the [OpenMM](https://github.com/openmm/openmm) package.  The source code of the Lepton library should be copied into `lib/lepton` to allow using the new `LEPTON` flag in the `configure` script.  Unless a pre-compiled Lepton library is copied manually into `lib/lepton/lib_$config_arch`, you will also need to apply the `c++11` patch first to enable C++11 across the board for VMD.
+
+  _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2020-06-03.
+
+
 - `volmap-fix`: This change fixes a bug in the `volmap` utility when dynamic selections are used (i.e. when the set of atoms changes between trajectory frames).  Files in [this folder](volmap-fix/test) allow to compare behavior with different VMD versions; because the bug is caused by an out-of-bounds memory access, it is advisable to repeat the test a few times.
 
   _Status:_ included in [VMD CVS](https://www.ks.uiuc.edu/Research/vmd/doxygen/cvsget.html) since 2019-01-23, patch available for VMD 1.9.3 in the `v1.9.3` branch.
