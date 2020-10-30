@@ -1,8 +1,8 @@
 diff --git a/configure b/configure
-index 98c54407d..ec8a5394b 100755
+index 6f1590ecf..89d6434b0 100755
 --- a/configure
 +++ b/configure
-@@ -492,7 +492,7 @@ $arch_compilerc   = $arch_echo;
+@@ -495,7 +495,7 @@ $arch_compilerc   = $arch_echo;
  $arch_rcflags     = "No resource compiler required on this platform.";
  
  $arch_cc          = "cc";
@@ -11,7 +11,7 @@ index 98c54407d..ec8a5394b 100755
  $arch_nvcc        = "/usr/local/cuda-10.2/bin/nvcc";
  $arch_nvccflags   = "-lineinfo --ptxas-options=-v " . 
                      "-gencode arch=compute_30,code=compute_30 " .
-@@ -2126,7 +2126,7 @@ if ($config_arch eq "BLUEWATERS" ||
+@@ -2183,7 +2183,7 @@ if ($config_arch eq "BLUEWATERS" ||
    if ($config_icc) {
      # for compiling with Intel C/C++:
      $arch_cc          = "cc";
@@ -20,7 +20,7 @@ index 98c54407d..ec8a5394b 100755
      $arch_copts       = "-Wall -Wno-unknown-pragmas -m64 -msse2 -O3";
      $arch_opt_flag    = "-Wall -Wno-unknown-pragmas -m64 -msse2 -O3";
  
-@@ -2143,9 +2143,9 @@ if ($config_arch eq "BLUEWATERS" ||
+@@ -2200,9 +2200,9 @@ if ($config_arch eq "BLUEWATERS" ||
    } else {
      # Assume GCC 
      $arch_cc          = "cc";
@@ -32,7 +32,7 @@ index 98c54407d..ec8a5394b 100755
    }
  
    if ($config_mpi) {
-@@ -2247,14 +2247,14 @@ if ($config_arch eq "FREEBSD") {
+@@ -2304,14 +2304,14 @@ if ($config_arch eq "FREEBSD") {
      $arch_yacc     = "bison -b y -d ";  # If standard yacc doesn't work
  
      $arch_cc          = "gcc";
@@ -49,7 +49,7 @@ index 98c54407d..ec8a5394b 100755
      $arch_copts       = "-m32 -Wall -Wno-unknown-pragmas -O3";
  
      if ($config_static) {
-@@ -2303,7 +2303,7 @@ if ($config_arch eq "FREEBSDAMD64") {
+@@ -2360,7 +2360,7 @@ if ($config_arch eq "FREEBSDAMD64") {
      $arch_yacc     = "bison -b y -d ";  # If standard yacc doesn't work
  
      $arch_cc          = "gcc";
@@ -58,7 +58,7 @@ index 98c54407d..ec8a5394b 100755
      $arch_depend_flag = "-MM";
      $arch_shld        = "ld -shared";
      $arch_shlibname   = "so";
-@@ -2382,13 +2382,13 @@ if ($config_arch eq "LINUX") {
+@@ -2439,13 +2439,13 @@ if ($config_arch eq "LINUX") {
      } else {
        # compling with GCC
        $arch_cc          = "gcc";
@@ -74,7 +74,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_copts       = "-m32 -Wall -Wno-unknown-pragmas -O3";
  
        if ($config_static) {
-@@ -2449,7 +2449,7 @@ if ($config_arch eq "LINUXAMD64") {
+@@ -2506,7 +2506,7 @@ if ($config_arch eq "LINUXAMD64") {
      if ($config_icc) {
        # for compiling with Intel C/C++:
        $arch_cc          = "icc";
@@ -83,7 +83,7 @@ index 98c54407d..ec8a5394b 100755
        if ($config_avx512) {
          $arch_opt_flag    = "-Wall -Wno-unknown-pragmas -m64 -xMIC-AVX512 -O3";
          $arch_copts       = "-Wall -Wno-unknown-pragmas -m64 -xMIC-AVX512 -O3";
-@@ -2491,15 +2491,15 @@ if ($config_arch eq "LINUXAMD64") {
+@@ -2548,15 +2548,15 @@ if ($config_arch eq "LINUXAMD64") {
        }
      } elsif ($config_clang) {
        $arch_cc          = "clang";
@@ -102,7 +102,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_depend_flag   = "-MM";
        $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O6 -ffast-math";
  
-@@ -2583,7 +2583,7 @@ if ($config_arch eq "LINUXCARMA") {
+@@ -2640,7 +2640,7 @@ if ($config_arch eq "LINUXCARMA") {
                      "--ftz=true ";
    $cuda_library     = "-L/usr/local/cuda/lib";
    $arch_cc       = "cc";
@@ -111,7 +111,7 @@ index 98c54407d..ec8a5394b 100755
    $arch_copts       = "-Wall -Wno-unknown-pragmas -march=armv7-a -mcpu=cortex-a9 -mtune=cortex-a9 -mfpu=vfpv3-d16 -ffast-math -fomit-frame-pointer -fno-strict-aliasing -O3";
    $arch_opt_flag    = "-Wall -Wno-unknown-pragmas -march=armv7-a -mcpu=cortex-a9 -mtune=cortex-a9 -mfpu=vfpv3-d16 -ffast-math -fomit-frame-pointer -fno-strict-aliasing -O3";
    $arch_lex      = "flex";
-@@ -2641,7 +2641,7 @@ if ($config_arch eq "MACOSX") {
+@@ -2698,7 +2698,7 @@ if ($config_arch eq "MACOSX") {
      $python_libs        = "-framework Python -lpthread";
  
      $arch_cc          = "cc";
@@ -120,7 +120,7 @@ index 98c54407d..ec8a5394b 100755
      $arch_depend_flag = "-MM";
      $arch_opt_flag    = "-fPIC -Os -ffast-math";
      $arch_copts       = "-fPIC -Os -ffast-math";
-@@ -2731,13 +2731,13 @@ if ($config_arch eq "MACOSXX86" || $config_arch eq "MACOSXX86_64") {
+@@ -2788,13 +2788,13 @@ if ($config_arch eq "MACOSXX86" || $config_arch eq "MACOSXX86_64") {
  
      if ($config_lp64) {
        $arch_cc          = "cc";
@@ -136,7 +136,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_depend_flag = "-MM";
        $arch_opt_flag    = "-m32 -fPIC -Os -ffast-math";
        $arch_copts       = "-m32 -fPIC -Os -ffast-math";
-@@ -2863,20 +2863,20 @@ if ($config_arch eq "SUMMIT") {
+@@ -2920,20 +2920,20 @@ if ($config_arch eq "SUMMIT") {
  
      if ($config_xlc) {
        $arch_cc          = "xlc";
@@ -160,7 +160,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power9";
        $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power9";
        $arch_depend_flag = "-MM";
-@@ -2936,14 +2936,14 @@ if ($config_arch eq "OPENPOWER" || $config_arch eq "SUMMITDEV") {
+@@ -2993,14 +2993,14 @@ if ($config_arch eq "OPENPOWER" || $config_arch eq "SUMMITDEV") {
  
      if ($config_xlc) {
        $arch_cc          = "xlc";
@@ -177,7 +177,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
        $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
        $arch_depend_flag = "-MM";
-@@ -2996,7 +2996,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
+@@ -3053,7 +3053,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
        if ($config_lp64) {
          print "GCC doesn't support LP64 ABI on this platform currently.\n";
        }
@@ -186,7 +186,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_cc	        = "gcc";
        $arch_opt_flag    = "-O";
        $arch_copts       = "-O";
-@@ -3006,7 +3006,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
+@@ -3063,7 +3063,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
        # Using Sun's compilers.
        if ($config_lp64) {
          print "Configured for a 64-bit build.\n";
@@ -195,7 +195,7 @@ index 98c54407d..ec8a5394b 100755
          $arch_cc          = "cc -D__EXTENSIONS__";
          if ($config_pthreads) {
            $arch_opt_flag    = "-mt -fast -xO3 -native -xarch=v9a";
-@@ -3019,7 +3019,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
+@@ -3076,7 +3076,7 @@ if ($config_arch eq "SOLARIS2" || $config_arch eq "SOLARIS2_64") {
          $arch_depend_flag = "-xM";
        } else {
          print "Configured for a 32-bit build.\n";
@@ -204,7 +204,7 @@ index 98c54407d..ec8a5394b 100755
          $arch_cc          = "cc -D__EXTENSIONS__";
          if ($config_pthreads) {
            $arch_opt_flag    = "-mt -fast -xO3 -native -xarch=v8plusa";
-@@ -3069,7 +3069,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
+@@ -3126,7 +3126,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
        if ($config_lp64) {
          die "No LP64 gcc for this platform currently.\n";
        }
@@ -213,7 +213,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_cc	        = "gcc";
  # XXX gcc/g++ 2.95 and newer need -fpermissive since the X11 headers 
  # on Solaris (and other systems) are broken and still assume that missing
-@@ -3083,7 +3083,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
+@@ -3140,7 +3140,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
        # Using Sun's compilers
        if ($config_lp64) {
          print "Configured for a 64-bit build.\n";
@@ -222,7 +222,7 @@ index 98c54407d..ec8a5394b 100755
          $arch_cc          = "cc -D__EXTENSIONS__";
          if ($config_pthreads) {
            $arch_opt_flag    = "-mt -fast -xO5 -xarch=native64";
-@@ -3104,7 +3104,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
+@@ -3161,7 +3161,7 @@ if ($config_arch eq "SOLARISX86" || $config_arch eq "SOLARISX86_64") {
          }
        } else {
          print "Configured for a 32-bit build.\n";
@@ -231,7 +231,7 @@ index 98c54407d..ec8a5394b 100755
          $arch_cc          = "cc -D__EXTENSIONS__";
          if ($config_pthreads) {
            $arch_copts       = "-mt -fast -xO3 -native";
-@@ -3160,7 +3160,7 @@ if ($config_arch eq "WIN32") {
+@@ -3217,7 +3217,7 @@ if ($config_arch eq "WIN32") {
        $arch_cppopts     = "/TP";
        $arch_coptout     = "/Fo";
      } else {
@@ -240,7 +240,7 @@ index 98c54407d..ec8a5394b 100755
        $arch_cc	        = "gcc";
        $arch_opt_flag    = "-O";
        $arch_debug_flag  = "-g";
-@@ -3177,7 +3177,7 @@ if ($config_arch eq "WIN32") {
+@@ -3234,7 +3234,7 @@ if ($config_arch eq "WIN32") {
  
  
  if ($config_arch eq "WIN64") {
