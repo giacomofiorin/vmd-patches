@@ -1,8 +1,8 @@
 diff --git a/configure b/configure
-index 6f1590ecf..2faa8d615 100755
+index f43a669fb..a300351b9 100755
 --- a/configure
 +++ b/configure
-@@ -221,7 +221,8 @@ $config_liboptix        = 0;  # Built-in OptiX ray tracing support
+@@ -222,7 +222,8 @@ $config_liboptix        = 0;  # Built-in OptiX ray tracing support
  $config_libtachyon      = 0;  # Built-in Tachyon ray tracing support 
  $config_vrpn            = 0;  # VRPN tracker/wand/haptic support
  $config_netcdf          = 0;  # NetCDF support
@@ -12,7 +12,7 @@ index 6f1590ecf..2faa8d615 100755
  $config_contrib         = 0;  # VMD Contributed code, off by default
  
  $config_silent          = 0;  # noisy makefiles (can't turn this off, only on)
-@@ -299,6 +300,7 @@ foreach $term (@ARGV) {
+@@ -300,6 +301,7 @@ foreach $term (@ARGV) {
      if ($term eq "VRPN")            { $config_vrpn            = 1; next; }
      if ($term eq "NETCDF")          { $config_netcdf          = 1; next; }
      if ($term eq "COLVARS")         { $config_colvars         = 1; next; }
@@ -20,7 +20,7 @@ index 6f1590ecf..2faa8d615 100755
      if ($term eq "CONTRIB")         { $config_contrib         = 1; next; }
      if ($term eq "TCL")             { $config_tcl             = 1; next; }
      if ($term eq "PYTHON")          { $config_python          = 1; next; }
-@@ -376,6 +378,7 @@ if ($config_openhmd)         { $config_string .= " OPENHMD"         }
+@@ -377,6 +379,7 @@ if ($config_openhmd)         { $config_string .= " OPENHMD"         }
  if ($config_vrpn)            { $config_string .= " VRPN"            }
  if ($config_netcdf)          { $config_string .= " NETCDF"          }
  if ($config_colvars)         { $config_string .= " COLVARS"         }
@@ -28,7 +28,7 @@ index 6f1590ecf..2faa8d615 100755
  if ($config_contrib)         { $config_string .= " CONTRIB"         }
  if ($config_tcl)             { $config_string .= " TCL"             }
  if ($config_python)          { $config_string .= " PYTHON"          }
-@@ -865,6 +868,34 @@ if ($config_colvars) {
+@@ -867,6 +870,34 @@ if ($config_colvars) {
  }
  
  
@@ -63,7 +63,7 @@ index 6f1590ecf..2faa8d615 100755
  ################ IMD
  # OPTIONAL COMPONENT: Interactive Molecular Dynamics support
  # This may be commented out if not required.
-@@ -3414,6 +3445,7 @@ $if_statements .= &create_config_option('avx');
+@@ -3539,6 +3570,7 @@ $if_statements .= &create_config_option('avx');
  $if_statements .= &create_config_option('avx512');
  $if_statements .= &create_config_option('cpudispatch');
  $if_statements .= &create_config_option('colvars');
@@ -71,7 +71,7 @@ index 6f1590ecf..2faa8d615 100755
  $if_statements .= &create_config_option('cuda');
  $if_statements .= &create_config_option('opencl');
  $if_statements .= &create_config_option('mpi');
-@@ -3664,12 +3696,14 @@ YFLAGS      = $arch_yflags
+@@ -3798,12 +3830,14 @@ YFLAGS      = $arch_yflags
  ### Source targets
  all default:   $config_progname
  
@@ -87,7 +87,7 @@ index 6f1590ecf..2faa8d615 100755
  install:
  	if [ ! -d "$install_library_dir" ]; then \\
  		\$(MAKEDIR) "$install_library_dir" ; \\
-@@ -3785,6 +3819,10 @@ EOM
+@@ -3919,6 +3953,10 @@ EOM
      ;
  close(OUTFILE);
  
