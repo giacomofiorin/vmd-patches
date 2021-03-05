@@ -14,7 +14,7 @@ The following changes are included in this repository:
   _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2021-02-24.
 
 
-- `lepton`: This change adds a build recipe for the [Lepton](https://simtk.org/projects/lepton) library, which is available from the [OpenMM](https://github.com/openmm/openmm) package.  The source code of the Lepton library should be copied into `lib/lepton` to allow using the new `LEPTON` flag in the `configure` script.  Unless a pre-compiled Lepton library is copied manually into `lib/lepton/lib_$config_arch`, you will also need to apply the `c++11` patch first to enable C++11 across the board for VMD.
+- `lepton`: This change adds a build recipe for the [Lepton](https://simtk.org/projects/lepton) library, which is available from the [OpenMM](https://github.com/openmm/openmm) package.  The source code of the Lepton library should be copied into `lib/lepton` to allow using the new `LEPTON` flag in the `configure` script (feel free to use the `add_lepton.sh` script to automatically download it).  Unless you copy a pre-compiled Lepton library into `lib/lepton/lib_$config_arch` before building VMD, you will also need to apply the `c++11` patch first to enable C++11 across the board for VMD.
 
   _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2021-02-24.
 
