@@ -9,7 +9,7 @@ If a diff file is empty, it means that the corresponding change has been already
 The following changes are included in this repository:
 
 
-- `c++11`: This patch enables building VMD with the C++11 standard, allowing to include in the resulting build newer code that requires it, like the `lepton` patch or [certain features](https://colvars.github.io/README-c++11.html) of the Colvars module.
+- `c++11`: This patch enables building VMD with the C++11 standard, allowing to include in the resulting build newer code that requires it, like the `lepton` patch or [certain features](https://colvars.github.io/README-c++11.html) of the [Colvars](https://colvars.github.io) module.
 
   _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2021-02-24.
 
@@ -28,5 +28,7 @@ The standard Unix method can be used to update a VMD source tree:
 patch -p1 < patch-name.diff -d VMD-source-top-directory
 ```
 `patch` is a standard utility in Linux and MacOS, also available on Windows via the [UnxUtils](https://sourceforge.net/projects/unxutils/) package.
+
+**See also**: Use the script included in the [Colvars](https://github.com/Colvars/colvars) to update VMD with the latest version of Colvars.
 
 Please see [here](http://www.ks.uiuc.edu/Research/vmd/doxygen/compiling.html#compiling) for instructions about how to compile VMD from source.
