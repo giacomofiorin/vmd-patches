@@ -13,12 +13,12 @@ The following patches are included in this repository:
 
 - `c++11`: This patch enables building VMD with the C++11 standard, allowing to include in the resulting build newer code that requires it, like the `lepton` patch or [certain features](https://colvars.github.io/README-c++11.html) of the [Colvars](https://colvars.github.io) module.
 
-  _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2021-02-24.
+  _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2021-11-18.
 
 
 - `lepton`: This change adds a VMD build recipe for the [Lepton](https://simtk.org/projects/lepton) library, which is available from the [OpenMM](https://github.com/openmm/openmm) package.  The source code of the Lepton library should be copied into `lib/lepton` to allow using the new `LEPTON` flag in the `configure` script.  Feel free to use the `add_lepton.sh` script to automatically download it: Lepton is distributed unter the [MIT license](https://opensource.org/licenses/MIT).  Unless you copy a pre-compiled Lepton library into `lib/lepton/lib_$config_arch` before building VMD, you will also need to apply the `c++11` patch first to enable C++11 for the entire VMD build.
 
-  _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2021-02-24.
+  _Status:_ not included in the main VMD distribution yet; a patch is available for the VMD CVS snapshot of date 2021-11-18.
 
 
 - `volmap-fix`: This change fixes a bug in the `volmap` utility when dynamic selections are used (i.e. when the set of atoms changes between trajectory frames).  Files in [this folder](volmap-fix/test) allow to compare behavior with different VMD versions; because the bug is caused by an out-of-bounds memory access, it is advisable to repeat the test a few times.
