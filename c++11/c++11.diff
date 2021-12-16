@@ -1,7 +1,16 @@
 diff --git a/configure b/configure
-index 5545afee7..241d68fcb 100755
+index 13ebe33ac..d3ebfa91d 100755
 --- a/configure
 +++ b/configure
+@@ -506,7 +506,7 @@ $arch_nvccflags   = "-lineinfo --ptxas-options=-v " .
+                     "-gencode arch=compute_60,code=sm_60 " .
+                     "-gencode arch=compute_70,code=compute_70 " .
+                     "-gencode arch=compute_70,code=sm_70 " .
+-                    "--ftz=true ";
++                    "--ftz=true -std=c++11";
+ #                    "-gencode arch=compute_75,code=sm_75 " .
+ $arch_gcc         = "gcc";
+ $arch_gccpp       = "g++";
 @@ -2453,13 +2453,13 @@ if ($config_arch eq "LINUX") {
      } else {
        # compling with GCC
