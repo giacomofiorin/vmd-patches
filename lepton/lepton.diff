@@ -1,5 +1,5 @@
 diff --git a/configure b/configure
-index 5545afee7..f20e26dfd 100755
+index 13ebe33ac..730d5a29b 100755
 --- a/configure
 +++ b/configure
 @@ -220,7 +220,8 @@ $config_liboptix        = 0;  # Built-in OptiX ray tracing support
@@ -28,7 +28,7 @@ index 5545afee7..f20e26dfd 100755
  if ($config_contrib)         { $config_string .= " CONTRIB"         }
  if ($config_tcl)             { $config_string .= " TCL"             }
  if ($config_python)          { $config_string .= " PYTHON"          }
-@@ -865,6 +868,34 @@ if ($config_colvars) {
+@@ -865,6 +868,30 @@ if ($config_colvars) {
  }
  
  
@@ -42,16 +42,12 @@ index 5545afee7..f20e26dfd 100755
 +  $lepton_library     = "-L$lepton_dir/lib_$config_arch";
 +  $lepton_libs        = "-llepton";
 +  $lepton_defines     = "-DLEPTON";
-+  $lepton_target      = "$lepton_dir/lib_$config_arch/liblepton.a";
-+  $lepton_rule        = "$lepton_target:\n\tcd $lepton_dir; make";
 +} else {
 +  $lepton_dir         = "";
 +  $lepton_include     = "";
 +  $lepton_library     = "";
 +  $lepton_libs        = "";
 +  $lepton_defines     = "";
-+  $lepton_target      = "";
-+  $lepton_rule        = "";
 +}
 +@lepton_cc          = ();
 +@lepton_cu          = ();
@@ -63,7 +59,7 @@ index 5545afee7..f20e26dfd 100755
  ################ IMD
  # OPTIONAL COMPONENT: Interactive Molecular Dynamics support
  # This may be commented out if not required.
-@@ -3532,6 +3563,7 @@ $if_statements .= &create_config_option('avx');
+@@ -3532,6 +3559,7 @@ $if_statements .= &create_config_option('avx');
  $if_statements .= &create_config_option('avx512');
  $if_statements .= &create_config_option('cpudispatch');
  $if_statements .= &create_config_option('colvars');
@@ -71,148 +67,3 @@ index 5545afee7..f20e26dfd 100755
  $if_statements .= &create_config_option('cuda');
  $if_statements .= &create_config_option('opencl');
  $if_statements .= &create_config_option('mpi');
-@@ -3791,12 +3823,14 @@ YFLAGS      = $arch_yflags
- ### Source targets
- all default:   $config_progname
- 
--$config_progname: y.tab.h \$(VMD_OBJS) \$(VMD_PTX)
-+$config_progname: y.tab.h \$(VMD_OBJS) \$(VMD_PTX) $lepton_target
- 	\$(ECHO) "Linking " \$\@ "..."; \\
- 	\$(CD) $vmd_arch_dir ; \\
- 	\$(CCPP) \$(CPPFLAGS) -I$vmd_src_dir -o \$\@ \$(VMD_OBJS) \$(LOADLIBES) ; 
- 	\$(COMPILERC) \$(RCFLAGS)
- 
-+$lepton_rule
-+
- install:
- 	if [ ! -d "$install_library_dir" ]; then \\
- 		\$(MAKEDIR) "$install_library_dir" ; \\
-@@ -3912,6 +3946,10 @@ EOM
-     ;
- close(OUTFILE);
- 
-+if ($config_lepton) {
-+    require "./src/lepton_configure.pl";
-+}
-+
- if (! -d  $config_arch) {
-   `mkdir $config_arch`;
- }
-diff --git a/src/lepton_configure.pl b/src/lepton_configure.pl
-new file mode 100644
-index 000000000..bd7563c02
---- /dev/null
-+++ b/src/lepton_configure.pl
-@@ -0,0 +1,112 @@
-+# Fill in the build recipe for the Lepton library
-+
-+if (! -d "src/$lepton_dir") {
-+    die "Lepton directory does not exist: $!\n";
-+}
-+
-+if (! -d "src/$lepton_dir/lib_$config_arch") {
-+    `mkdir -p src/$lepton_dir/lib_$config_arch`;
-+}
-+
-+if (-f "src/$lepton_dir/lib_$config_arch/liblepton.a") {
-+    print "Using Lepton library from src/$lepton_dir/lib_$config_arch/liblepton.a.\n";
-+} else {
-+
-+    open(OUTFILE, ">src/$lepton_dir/Makefile") ||
-+        die "Cannot open src/$lepton_dir/Makefile: $!\n";
-+
-+    print OUTFILE<<EOM;
-+COPTC = -c
-+COPTO = -o
-+CCPP = $arch_ccpp
-+LEPTONCPPFLAGS = $arch_opt_flag $arch_cppopts -Iinclude $rpm_optflags
-+LEPTONOBJDIR = lib_$config_arch/
-+
-+LEPTONLIB = \$(LEPTONOBJDIR)liblepton.a
-+LEPTONOBJS = \\
-+\$(LEPTONOBJDIR)CompiledExpression.o \\
-+\$(LEPTONOBJDIR)ExpressionProgram.o \\
-+\$(LEPTONOBJDIR)ExpressionTreeNode.o \\
-+\$(LEPTONOBJDIR)Operation.o \\
-+\$(LEPTONOBJDIR)ParsedExpression.o \\
-+\$(LEPTONOBJDIR)Parser.o
-+
-+\$(LEPTONLIB): \$(LEPTONOBJS)
-+	-ar -rs \$(LEPTONLIB) \$(LEPTONOBJS)
-+
-+include Make.depends
-+EOM
-+        ;
-+    close(OUTFILE);
-+
-+    open(OUTFILE, ">src/$lepton_dir/Make.depends") ||
-+        die "Cannot open src/$lepton_dir/Make.depends: $!\n";
-+
-+    print OUTFILE<<EOM;
-+\$(LEPTONOBJDIR)CompiledExpression.o: \\
-+	src/CompiledExpression.cpp \\
-+	include/lepton/CompiledExpression.h \\
-+	include/lepton/ExpressionTreeNode.h \\
-+	include/lepton/windowsIncludes.h \\
-+	include/lepton/Operation.h \\
-+	include/lepton/CustomFunction.h \\
-+	include/lepton/Exception.h \\
-+	include/lepton/ParsedExpression.h
-+	\$(CCPP) \$(LEPTONCPPFLAGS) \$(COPTO)\$(LEPTONOBJDIR)CompiledExpression.o \$(COPTC) src/CompiledExpression.cpp
-+\$(LEPTONOBJDIR)ExpressionProgram.o: \\
-+	src/ExpressionProgram.cpp \\
-+	include/lepton/ExpressionProgram.h \\
-+	include/lepton/ExpressionTreeNode.h \\
-+	include/lepton/windowsIncludes.h \\
-+	include/lepton/Operation.h \\
-+	include/lepton/CustomFunction.h \\
-+	include/lepton/Exception.h \\
-+	include/lepton/ParsedExpression.h
-+	\$(CCPP) \$(LEPTONCPPFLAGS) \$(COPTO)\$(LEPTONOBJDIR)ExpressionProgram.o \$(COPTC) src/ExpressionProgram.cpp
-+\$(LEPTONOBJDIR)ExpressionTreeNode.o: \\
-+	src/ExpressionTreeNode.cpp \\
-+	include/lepton/ExpressionTreeNode.h \\
-+	include/lepton/windowsIncludes.h \\
-+	include/lepton/Exception.h \\
-+	include/lepton/Operation.h \\
-+	include/lepton/CustomFunction.h \\
-+	include/lepton/Exception.h
-+	\$(CCPP) \$(LEPTONCPPFLAGS) \$(COPTO)\$(LEPTONOBJDIR)ExpressionTreeNode.o \$(COPTC) src/ExpressionTreeNode.cpp
-+\$(LEPTONOBJDIR)Operation.o: \\
-+	src/Operation.cpp \\
-+	include/lepton/Operation.h \\
-+	include/lepton/windowsIncludes.h \\
-+	include/lepton/CustomFunction.h \\
-+	include/lepton/Exception.h \\
-+	include/lepton/ExpressionTreeNode.h \\
-+	src/MSVC_erfc.h
-+	\$(CCPP) \$(LEPTONCPPFLAGS) \$(COPTO)\$(LEPTONOBJDIR)Operation.o \$(COPTC) src/Operation.cpp
-+\$(LEPTONOBJDIR)ParsedExpression.o: \\
-+	src/ParsedExpression.cpp \\
-+	include/lepton/ParsedExpression.h \\
-+	include/lepton/ExpressionTreeNode.h \\
-+	include/lepton/windowsIncludes.h \\
-+	include/lepton/CompiledExpression.h \\
-+	include/lepton/ExpressionProgram.h \\
-+	include/lepton/Operation.h \\
-+	include/lepton/CustomFunction.h \\
-+	include/lepton/Exception.h
-+	\$(CCPP) \$(LEPTONCPPFLAGS) \$(COPTO)\$(LEPTONOBJDIR)ParsedExpression.o \$(COPTC) src/ParsedExpression.cpp
-+\$(LEPTONOBJDIR)Parser.o: \\
-+	src/Parser.cpp \\
-+	include/lepton/Parser.h \\
-+	include/lepton/windowsIncludes.h \\
-+	include/lepton/CustomFunction.h \\
-+	include/lepton/Exception.h \\
-+	include/lepton/ExpressionTreeNode.h \\
-+	include/lepton/Operation.h \\
-+	include/lepton/CustomFunction.h \\
-+	include/lepton/Exception.h \\
-+	include/lepton/ParsedExpression.h \\
-+	include/lepton/ExpressionTreeNode.h
-+	\$(CCPP) \$(LEPTONCPPFLAGS) \$(COPTO)\$(LEPTONOBJDIR)Parser.o \$(COPTC) src/Parser.cpp
-+EOM
-+        ;
-+    close(OUTFILE);
-+
-+}
