@@ -11,7 +11,7 @@ fi
 if [ -f "${1}/src/VMDApp.h" ]; then
 
     if ! grep -q LEPTON "${1}/configure" ; then
-        patch -p1 < lepton.diff -d "${1}"
+        patch -p1 < $(dirname $0)/lepton.diff -d "${1}"
     fi
 
     mkdir -p "${1}"/lib
@@ -26,7 +26,14 @@ if [ -f "${1}/src/VMDApp.h" ]; then
 
     echo "Trying to build Lepton using CMake"
     mkdir -p "${1}/lib/lepton/lib_${2}"
-    if hash cmake ; then
+
+    CMAKE=cmake
+    if hash cmake3 >& /dev/null ; then
+        # Use updated CMake on RHEL 7
+        CMAKE=cmake3
+    fi
+
+    if hash ${CMAKE} ; then
         cat > "${1}/lib/lepton/CMakeLists.txt" <<EOF
 cmake_minimum_required(VERSION 3.1)
 project(Lepton)
@@ -35,8 +42,8 @@ add_library(lepton STATIC \${LEPTON_SOURCES})
 target_include_directories(lepton PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/include)
 EOF
         if cd "${1}/lib/lepton/lib_${2}" ; then
-            cmake -DCMAKE_CXX_STANDARD=11 --source ..
-            cmake --build . --parallel $(nproc --all)
+            ${CMAKE} -DCMAKE_CXX_STANDARD=11 --source ..
+            ${CMAKE} --build . --parallel $(nproc --all)
             cd ..
         fi
     fi
