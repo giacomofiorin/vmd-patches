@@ -1,24 +1,17 @@
 diff --git a/configure b/configure
-index 13ebe33ac..d3ebfa91d 100755
+index 70fba19bf..997b06046 100755
 --- a/configure
 +++ b/configure
-@@ -506,7 +506,7 @@ $arch_nvccflags   = "-lineinfo --ptxas-options=-v " .
-                     "-gencode arch=compute_60,code=sm_60 " .
-                     "-gencode arch=compute_70,code=compute_70 " .
-                     "-gencode arch=compute_70,code=sm_70 " .
--                    "--ftz=true ";
-+                    "--ftz=true -std=c++11";
- #                    "-gencode arch=compute_75,code=sm_75 " .
- $arch_gcc         = "gcc";
- $arch_gccpp       = "g++";
-@@ -2453,13 +2453,13 @@ if ($config_arch eq "LINUX") {
-     } else {
-       # compling with GCC
-       $arch_cc          = "gcc";
--      $arch_ccpp        = "g++";
-+      $arch_ccpp        = "g++ -std=c++11";
-       $arch_depend_flag = "-MM";
-       $arch_shld        = "g++ -shared";
+@@ -202,7 +202,7 @@ $config_actc            = 0;  # ACTC
+ $config_avx512          = 0;  # AVX512
+ $config_cpudispatch     = 0;  # CPUDISPATCH
+ $config_cuda            = 0;  # CUDA
+-$config_cxx11           = 0;  # Require C++11 or greater
++$config_cxx11           = 1;  # Require C++11 or greater
+ $config_opencl          = 0;  # OpenCL
+ $config_openhmd         = 0;  # OpenHMD driver for Oculus Rift
+ $config_imd             = 0;  # interactive MD sockets code etc.
+@@ -2411,7 +2411,7 @@ if ($config_arch eq "LINUX") {
        $arch_shlibname   = "so";
        $arch_shcppopts   = "-fPIC";
        $arch_shldopts    = "";
@@ -27,81 +20,15 @@ index 13ebe33ac..d3ebfa91d 100755
        $arch_copts       = "-m32 -Wall -Wno-unknown-pragmas -O3";
  
        if ($config_static) {
-@@ -2520,7 +2520,7 @@ if ($config_arch eq "LINUXAMD64") {
-     if ($config_icc) {
-       # for compiling with Intel C/C++:
-       $arch_cc          = "icc";
--      $arch_ccpp        = "icpc";
-+      $arch_ccpp        = "icpc -std=c++11";
-       if ($config_avx512) {
-         $arch_opt_flag    = "-Wall -Wno-unknown-pragmas -m64 -xMIC-AVX512 -O3";
-         $arch_copts       = "-Wall -Wno-unknown-pragmas -m64 -xMIC-AVX512 -O3";
-@@ -2562,15 +2562,15 @@ if ($config_arch eq "LINUXAMD64") {
-       }
-     } elsif ($config_clang) {
-       $arch_cc          = "clang";
--      $arch_ccpp        = "clang++";
-+      $arch_ccpp        = "clang++ -std=c++11";
-       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math ";
-       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math ";
-       $arch_depend_flag = "-MM";
-     } else {
-       # for compiling with g++:
-       $arch_cc		= "gcc";
--      $arch_ccpp  	= "g++";
--      $arch_opt_flag	= "-m64 -fno-for-scope -Wno-deprecated -Wall -Wno-unknown-pragmas -O6 -ffast-math";
-+      $arch_ccpp  	= "g++ -std=c++11";
-+      $arch_opt_flag	= "-m64 -Wno-deprecated -Wall -Wno-unknown-pragmas -O6 -ffast-math";
-       $arch_depend_flag   = "-MM";
-       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O6 -ffast-math";
+@@ -2536,7 +2536,10 @@ if ($config_arch eq "LINUXAMD64") {
+     }
  
-@@ -2712,7 +2712,7 @@ if ($config_arch eq "MACOSX") {
-     $python_libs        = "-framework Python -lpthread";
+     if ($config_cxx11) {
+-      $arch_opt_flag .= " -std=c++11"
++      $arch_opt_flag .= " -std=c++11";
++      if ($config_cuda) {
++        $arch_nvccflags .= " -std=c++11";
++      }
+     }
  
-     $arch_cc          = "cc";
--    $arch_ccpp        = "c++";
-+    $arch_ccpp        = "c++ -std=c++11";
-     $arch_depend_flag = "-MM";
-     $arch_opt_flag    = "-fPIC -Os -ffast-math";
-     $arch_copts       = "-fPIC -Os -ffast-math";
-@@ -2903,13 +2903,13 @@ if ($config_arch eq "MACOSXX86" || $config_arch eq "MACOSXX86_64") {
- 
-     if ($config_lp64) {
-       $arch_cc          = "cc";
--      $arch_ccpp        = "c++";
-+      $arch_ccpp        = "c++ -std=c++11";
-       $arch_depend_flag = "-MM";
-       $arch_opt_flag    = "-m64 -fPIC -Os -ffast-math";
-       $arch_copts       = "-m64 -fPIC -Os -ffast-math";
-     } else {
-       $arch_cc          = "cc";
--      $arch_ccpp        = "c++";
-+      $arch_ccpp        = "c++ -std=c++11";
-       $arch_depend_flag = "-MM";
-       $arch_opt_flag    = "-m32 -fPIC -Os -ffast-math";
-       $arch_copts       = "-m32 -fPIC -Os -ffast-math";
-@@ -3048,13 +3048,13 @@ if ($config_arch eq "SUMMIT") {
-       $arch_depend_flag = "-MM";
-     } elsif ($config_gcc) {
-       $arch_cc          = "gcc";
--      $arch_ccpp        = "g++";
-+      $arch_ccpp        = "g++ -std=c++11";
-       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
-       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
-       $arch_depend_flag = "-MM";
-     } elsif ($config_clang) {
-       $arch_cc          = "clang";
--      $arch_ccpp        = "clang++";
-+      $arch_ccpp        = "clang++ -std=c++11";
-       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power9";
-       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power9";
-       $arch_depend_flag = "-MM";
-@@ -3123,7 +3123,7 @@ if ($config_arch eq "OPENPOWER" || $config_arch eq "SUMMITDEV") {
-       $arch_depend_flag = "-MM";
-     } else {
-       $arch_cc          = "gcc";
--      $arch_ccpp        = "g++";
-+      $arch_ccpp        = "g++ -std=c++11";
-       $arch_opt_flag    = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
-       $arch_copts       = "-m64 -Wall -Wno-unknown-pragmas -O3 -ffast-math -mtune=power8";
-       $arch_depend_flag = "-MM";
+     if ($config_cuda) {
