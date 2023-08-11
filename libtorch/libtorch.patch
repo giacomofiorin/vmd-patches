@@ -1,0 +1,76 @@
+diff --git a//configure b//configure
+index 0785172..f4c6791 100755
+--- a/configure
++++ b/configure
+@@ -232,6 +232,7 @@ $config_plugin          = 1;  # this is always on
+ $config_numeric         = 0;  # off by default
+ $config_rpm             = 0;  # off by default
+ $config_staticplugin    = 1;  # on by default
++$config_libtorch 	= 0;  # LibTorch support (used by Colvars), off by default
+ 
+ foreach $term (@ARGV) {
+     # graphics/windowing library
+@@ -308,6 +309,7 @@ foreach $term (@ARGV) {
+     if ($term eq "RPM")             { $config_rpm             = 1; next; }
+     if ($term eq "TKCON")           { $config_tkcon           = 1; next; }
+     if ($term eq "NOSTATICPLUGINS") { $config_staticplugin    = 0; next; }
++    if ($term eq "LIBTORCH")        { $config_libtorch        = 1; next; }
+ 
+     # once optional, these are now required.  They exist for backwards
+     # compatibility; some may be expanded again in the future
+@@ -386,6 +388,7 @@ if ($config_numeric)         { $config_string .= " NUMPY"           }
+ if ($config_rpm)             { $config_string .= " RPM"             }
+ if ($config_tkcon)           { $config_string .= " TKCON"           }
+ if ($config_staticplugin==0) { $config_string .= " NOSTATICPLUGINS" }
++if ($config_libtorch)        { $config_string .= " LIBTORCH"        }
+ 
+ if ($config_silent)          { $config_string .= " SILENT"          }
+ if ($config_static)          { $config_string .= " STATIC"          }
+@@ -904,6 +907,28 @@ if ($config_pthreads) {
+                       ); 
+ }
+ 
++################ LIBTORCH
++# OPTIONAL COMPONENT: LibTorch library
++# This allows VMD to use torchann colvars component from the colvars module
++# https://pytorch.org/cppdocs/installing.html
++if ($config_libtorch) {
++  $libtorch_dir         = "$vmd_library_dir/libtorch";
++  $libtorch_include     = "-I$libtorch_dir/include -I$libtorch_dir/include/torch/csrc/api/include";
++  $libtorch_library     = "-L$libtorch_dir/lib";
++  $libtorch_libs        = "-Wl,-rpath,$libtorch_dir/lib -L$libtorch_dir/lib -ltorch -ltorch_cpu -lc10 -ltorch";
++  $libtorch_defines     = "-DTORCH";
++} else {
++  $libtorch_dir         = "";
++  $libtorch_include     = "";
++  $libtorch_library     = "";
++  $libtorch_libs        = "";
++  $libtorch_defines     = "";
++}
++@libtorch_cc          = ();
++@libtorch_cu          = ();
++@libtorch_ccpp        = ();
++@libtorch_h           = ();
++@libtorch_extra       = ();
+ 
+ ################### system supplied sources and libraries
+ # these are the last libraries listed on the link line, and should
+@@ -2596,6 +2621,10 @@ if ($config_arch eq "LINUXAMD64") {
+       $cuda_library     = "-L/usr/local/cuda-10.2/lib64";
+     }
+ 
++    if ($config_libtorch) {
++      $arch_cppopts .= " -std=c++14"
++    }
++
+     $arch_lex		= "flex"; # has problems with vendor lex
+ 
+     # added a test so that EGL support works for now, but these bits of
+@@ -3567,6 +3596,7 @@ $if_statements .= &create_config_option('python');
+ $if_statements .= &create_config_option('pthreads');
+ $if_statements .= &create_config_option('numeric');
+ $if_statements .= &create_config_option('zlib');
++$if_statements .= &create_config_option('libtorch');
+ 
+ # all of the default stuff, tcl, etc..
+ $if_statements .= &create_config_option('vmd');
