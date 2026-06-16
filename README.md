@@ -1,3 +1,5 @@
+**NOTE**: Starting with VMD 2, the VMD CVS repository has been de facto abandoned and has not been replaced yet.  Therefore, the patches below will be out of date.
+
 # VMD patches
 
 [Visual Molecular Dynamics (VMD)](http://www.ks.uiuc.edu/Research/vmd) is a molecular visualization program developed by the University of Illinois at Urbana-Champaign (UIUC).
